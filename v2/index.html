@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base Geral de Cadastro</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;--panel:#ffffff;--border:#dfe3eb;--text:#1f2937;
+      --muted:#6b7280;--primary:#164194;--primary-soft:#eaf2ff;
+      --shadow:0 8px 24px rgba(15,23,42,.08);--radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+
+    /* HEADER */
+    .topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:20;}
+    .brand{display:flex;align-items:center;gap:18px;}
+    .brand-logo{height:56px;width:auto;object-fit:contain;}
+    .brand-title{font-size:28px;font-weight:700;color:var(--primary);margin:0;}
+    .brand-subtitle{font-size:11px;color:var(--primary);opacity:.7;margin-top:3px;text-align:center;}
+
+    /* LAYOUT */
+    .layout{display:flex;flex-direction:column;gap:16px;padding:16px;}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);}
+
+    /* FILTROS */
+    .filters-card{padding:16px 18px;}
+    .filters-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 16px;}
+    .filter-group{display:flex;flex-direction:column;gap:6px;}
+    .filter-group label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+    .filter-group select{width:100%;border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;outline:none;background:#fff;cursor:pointer;}
+    .filter-group select:focus{border-color:var(--primary);}
+    .filter-actions{display:flex;flex-direction:column;gap:6px;}
+    .filter-actions-row{display:flex;align-items:center;gap:10px;}
+    .search-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex:1 1 auto;box-shadow:var(--shadow);}
+    .search-box input{border:none;outline:none;width:100%;font-size:14px;background:transparent;}
+    .btn{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600;box-shadow:var(--shadow);white-space:nowrap;}
+    .btn:hover{background:#f0f4ff;border-color:var(--primary);color:var(--primary);}
+
+    /* TOOLBAR */
+    .table-toolbar{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .table-toolbar .info{font-size:13px;color:var(--muted);}
+    .export-csv-btn{border:1px solid var(--border);background:#fff;color:var(--muted);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;}
+    .export-csv-btn:hover{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);}
+
+    /* TABELA */
+    .table-container{overflow-x:auto;}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:1100px;}
+    thead th{position:sticky;top:0;background:#fff;z-index:2;text-align:center;padding:12px;border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.4px;white-space:nowrap;}
+    tbody td{padding:12px;border-bottom:1px solid #eef1f6;font-size:14px;vertical-align:top;}
+    tbody tr:hover{background:#f8fbff;}
+    .cell-ellipsis{max-width:260px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;white-space:normal;}
+    .badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border);background:#fff;white-space:nowrap;}
+    .badge.status-padrao{background:#ecfdf5;color:#065f46;border-color:#a7f3d0;}
+    .badge.status-fora{background:#fff7ed;color:#9a3412;border-color:#fed7aa;}
+    .loader{padding:40px;text-align:center;color:var(--muted);}
+
+    /* PAGINAÇÃO */
+    .pagination-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 18px;border-top:1px solid var(--border);flex-wrap:wrap;}
+    .pagination{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;}
+    .pg-btn{min-width:36px;height:36px;padding:0 10px;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;}
+    .pg-btn:hover:not(:disabled){background:var(--primary-soft);border-color:var(--primary);color:var(--primary);}
+    .pg-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+    .pg-btn:disabled{opacity:.35;cursor:default;}
+    .pg-ellipsis{font-size:13px;color:var(--muted);padding:0 4px;}
+    .page-size-control{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap;}
+    .page-size-control select{border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;background:#fff;color:var(--text);outline:none;cursor:pointer;}
+
+    @media(max-width:1200px){.filters-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+    @media(max-width:900px){.filters-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:640px){.filters-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="brand-logo" src="https://lh3.googleusercontent.com/d/1FepWjuuLUr0q0PCnvHODxj1vbk288Lh6" alt="Logo FIESC"/>
+    <div>
+      <h1 class="brand-title">Base Geral de Cadastro</h1>
+      <div id="dataAtualizacao" class="brand-subtitle"></div>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+
+  <section class="card filters-card">
+    <div class="filters-grid">
+      <div class="filter-group"><label for="fCatalogo">Catálogo</label><select id="fCatalogo"><option value="">Todos</option></select></div>
+      <div class="filter-group"><label for="fProdAntigo">Produto Antigo</label><select id="fProdAntigo"><option value="">Todos</option></select></div>
+      <div class="filter-group"><label for="fProdNovo">Produto Novo</label><select id="fProdNovo"><option value="">Todos</option></select></div>
+      <div class="filter-group"><label for="fStatus">Status</label><select id="fStatus"><option value="">Todos</option></select></div>
+      <div class="filter-group"><label for="fAquisicao">Aquisição</label><select id="fAquisicao"><option value="">Todos</option></select></div>
+      <div class="filter-group"><label for="fGrupo">Grupo de Compras</label><select id="fGrupo"><option value="">Todos</option></select></div>
+      <div class="filter-group"><label for="fTipoProd">Tipo do Produto</label><select id="fTipoProd"><option value="">Todos</option></select></div>
+      <div class="filter-actions">
+        <label style="color:transparent">&#8203;</label>
+        <div class="filter-actions-row">
+          <div class="search-box"><span>🔎</span><input type="text" id="globalSearch" placeholder="Buscar por item, nome ou variação..."/></div>
+          <button class="btn" id="clearBtn">Limpar filtros</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="table-toolbar">
+      <div class="info" id="tableInfo">Carregando registros...</div>
+      <button class="export-csv-btn" id="exportCsvBtn">⬇ Exportar CSV</button>
+    </div>
+    <div class="table-container"><div id="tableHolder" class="loader">Carregando catálogo...</div></div>
+    <div class="pagination-bar">
+      <div class="pagination" id="pagination"></div>
+      <div class="page-size-control">
+        <span>Visualizar</span>
+        <select id="pageSizeSelect">
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+        </select>
+        <span>por página</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const JSON_URL  = '../data/catalogo_v2.json';
+const DEFAULT_PAGE_SIZE = 50;
+
+let ALL      = [];
+let IDX      = [];
+let FILTERED = [];
+let currentPage = 1;
+let pageSize = DEFAULT_PAGE_SIZE;
+let searchTimer = null;
+
+const $ = id => document.getElementById(id);
+
+const FILTER_DEFS = [
+  { el: $('fCatalogo'),   key: 'CATÁLOGO'     },
+  { el: $('fProdAntigo'), key: 'NOME_ANTIGO'  },
+  { el: $('fProdNovo'),   key: 'NOME_NOVO'    },
+  { el: $('fStatus'),     key: 'STATUS'       },
+  { el: $('fAquisicao'),  key: 'AQUISIÇÃO'    },
+  { el: $('fGrupo'),      key: 'GRUPOCOMPRAS' },
+  { el: $('fTipoProd'),   key: 'TIPOPROD'     },
+];
+
+// ── INIT ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch(JSON_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const payload = await res.json();
+    if (Array.isArray(payload)) {
+      ALL = payload;
+    } else {
+      ALL = payload.itens || [];
+      if (payload.atualizadoEm) {
+        $('dataAtualizacao').textContent = 'Atualizado em: ' + payload.atualizadoEm;
+      }
+    }
+  } catch(e) {
+    $('tableHolder').innerHTML = '<div class="loader">Erro ao carregar: ' + e.message + '</div>';
+    return;
+  }
+
+  // Pré-computar índice de busca — inclui ITEM_ANTIGO, NOME_ANTIGO, VARIACAO_ANTIGA, ITEM_NOVO e NOME_NOVO
+  IDX = ALL.map(r =>
+    norm((r['ITEM_ANTIGO'] || '') + ' ' + (r['NOME_ANTIGO'] || '') + ' ' + (r['VARIACAO_ANTIGA'] || '') + ' ' + (r['ITEM_NOVO'] || '') + ' ' + (r['NOME_NOVO'] || ''))
+  );
+
+  // Popular dropdowns
+  FILTER_DEFS.forEach(f => {
+    const vals = [...new Set(ALL.map(r => r[f.key] || '').filter(Boolean))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+    vals.forEach(v => {
+      const o = document.createElement('option');
+      o.value = o.textContent = v;
+      f.el.appendChild(o);
+    });
+    f.el.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  });
+
+  $('globalSearch').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { currentPage = 1; applyFilters(); }, 300);
+  });
+
+  $('clearBtn').addEventListener('click', () => {
+    FILTER_DEFS.forEach(f => f.el.value = '');
+    $('globalSearch').value = '';
+    currentPage = 1;
+    applyFilters();
+  });
+
+  $('exportCsvBtn').addEventListener('click', exportCSV);
+
+  $('pageSizeSelect').addEventListener('change', () => {
+    pageSize = Number($('pageSizeSelect').value) || DEFAULT_PAGE_SIZE;
+    currentPage = 1;
+    applyFilters();
+  });
+
+  applyFilters();
+}
+
+// ── FILTRAR ───────────────────────────────────────────────────
+function applyFilters() {
+  const q = norm($('globalSearch').value);
+
+  FILTERED = [];
+  for (let i = 0; i < ALL.length; i++) {
+    if (q && !IDX[i].includes(q)) continue;
+    let ok = true;
+    for (const f of FILTER_DEFS) {
+      if (f.el.value && ALL[i][f.key] !== f.el.value) { ok = false; break; }
+    }
+    if (ok) FILTERED.push(i);
+  }
+
+  const total = FILTERED.length;
+  const pages = Math.ceil(total / pageSize) || 1;
+  if (currentPage > pages) currentPage = pages;
+
+  $('tableInfo').textContent = fmt(total) + ' registro(s) exibido(s) de ' + fmt(ALL.length) + ' da base';
+
+  renderPage();
+  renderPagination(pages);
+}
+
+// ── RENDERIZAR PÁGINA ─────────────────────────────────────────
+function renderPage() {
+  const start = (currentPage - 1) * pageSize;
+  const end   = Math.min(start + pageSize, FILTERED.length);
+  const slice = FILTERED.slice(start, end).map(i => ALL[i]);
+
+  if (!slice.length) {
+    $('tableHolder').innerHTML = '<div class="loader">Nenhum item encontrado.</div>';
+    return;
+  }
+
+  let html = `<table><thead><tr>
+    <th>ITEM_ANTIGO</th><th>NOME_ANTIGO</th><th>VARIACAO_ANTIGA</th><th>ITEM_NOVO</th><th>NOME_NOVO</th>
+    <th>STATUS</th><th>AQUISIÇÃO</th><th>CATÁLOGO</th><th>GRUPOCOMPRAS</th><th>TIPOPROD</th>
+  </tr></thead><tbody>`;
+  for (const row of slice) html += buildRow(row);
+  html += '</tbody></table>';
+  $('tableHolder').innerHTML = html;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── PAGINAÇÃO ─────────────────────────────────────────────────
+function renderPagination(pages) {
+  const pg = $('pagination');
+  if (pages <= 1) { pg.innerHTML = ''; return; }
+
+  const btns = [];
+  btns.push(makeBtn('← Anterior', currentPage === 1, () => goTo(currentPage - 1)));
+
+  const range = pageRange(currentPage, pages);
+  let prev = null;
+  for (const p of range) {
+    if (prev !== null && p - prev > 1) btns.push('<span class="pg-ellipsis">…</span>');
+    btns.push(makeBtn(String(p), false, () => goTo(p), p === currentPage));
+    prev = p;
+  }
+
+  btns.push(makeBtn('Próximo →', currentPage === pages, () => goTo(currentPage + 1)));
+
+  pg.innerHTML = '';
+  btns.forEach(b => {
+    if (typeof b === 'string') pg.insertAdjacentHTML('beforeend', b);
+    else pg.appendChild(b);
+  });
+}
+
+function makeBtn(label, disabled, onClick, active) {
+  const b = document.createElement('button');
+  b.className = 'pg-btn' + (active ? ' active' : '');
+  b.textContent = label;
+  b.disabled = disabled;
+  if (!disabled) b.addEventListener('click', onClick);
+  return b;
+}
+
+function pageRange(cur, total) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+  const pages = new Set([1, total, cur]);
+  for (let i = Math.max(2, cur - 2); i <= Math.min(total - 1, cur + 2); i++) pages.add(i);
+  return [...pages].sort((a, b) => a - b);
+}
+
+function goTo(page) {
+  currentPage = page;
+  renderPage();
+  renderPagination(Math.ceil(FILTERED.length / pageSize) || 1);
+}
+
+// ── EXPORTAR CSV ──────────────────────────────────────────────
+function exportCSV() {
+  const rows = FILTERED.map(i => ALL[i]);
+
+  if (!rows.length) {
+    alert('Nenhum registro para exportar.');
+    return;
+  }
+
+  const headers = [
+    'ITEM_ANTIGO',
+    'NOME_ANTIGO',
+    'VARIACAO_ANTIGA',
+    'ITEM_NOVO',
+    'NOME_NOVO',
+    'STATUS',
+    'AQUISIÇÃO',
+    'CATÁLOGO',
+    'GRUPOCOMPRAS',
+    'TIPOPROD'
+  ];
+
+  const csv = [
+    headers.join(';'),
+    ...rows.map(row =>
+      headers.map(h => csvCell(row[h])).join(';')
+    )
+  ].join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const data = new Date().toISOString().slice(0, 10);
+
+  link.href = URL.createObjectURL(blob);
+  link.download = 'catalogo_' + data + '.csv';
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(link.href);
+}
+
+// ── BUILD ROW ─────────────────────────────────────────────────
+function buildRow(row) {
+  const s   = (row['STATUS'] || '').toLowerCase();
+  const cls = s.includes('padr') && !s.includes('fora') ? 'badge status-padrao'
+            : s.includes('fora') ? 'badge status-fora' : 'badge';
+  return `<tr>
+    <td>${esc(row['ITEM_ANTIGO'])}</td>
+    <td><div class="cell-ellipsis">${esc(row['NOME_ANTIGO'])}</div></td>
+    <td><div class="cell-ellipsis">${esc(row['VARIACAO_ANTIGA'])}</div></td>
+    <td>${esc(row['ITEM_NOVO'])}</td>
+    <td><div class="cell-ellipsis">${esc(row['NOME_NOVO'])}</div></td>
+    <td><span class="${cls}">${esc(row['STATUS'])}</span></td>
+    <td><div class="cell-ellipsis">${esc(row['AQUISIÇÃO'])}</div></td>
+    <td><div class="cell-ellipsis">${esc(row['CATÁLOGO'])}</div></td>
+    <td><div class="cell-ellipsis">${esc(row['GRUPOCOMPRAS'])}</div></td>
+    <td>${esc(row['TIPOPROD'])}</td>
+  </tr>`;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function norm(t) { return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function fmt(n)  { return new Intl.NumberFormat('pt-BR').format(n); }
+function esc(s)  { return String(s||'-').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function csvCell(v) { return '"' + String(v ?? '').replace(/"/g, '""') + '"'; }
+
+init();
+</script>
+</body>
+</html>
