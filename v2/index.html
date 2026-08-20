@@ -245,8 +245,8 @@ function renderPage() {
   }
 
   let html = `<table><thead><tr>
-    <th>ITEM_ANTIGO</th><th>NOME_ANTIGO</th><th>VARIACAO_ANTIGA</th><th>ITEM_NOVO</th><th>NOME_NOVO</th>
-    <th>STATUS</th><th>AQUISIÇÃO</th><th>CATÁLOGO</th><th>GRUPOCOMPRAS</th><th>TIPOPROD</th>
+    <th>COD ANTIGO</th><th>NOME ANTIGO</th><th>VARIACAO ANTIGA</th><th>COD NOVO</th><th>NOME NOVO</th>
+    <th>STATUS</th><th>AQUISIÇÃO</th><th>CATÁLOGO</th><th>GRUPO DE COMPRAS</th><th>TIPO DE PROD</th>
   </tr></thead><tbody>`;
   for (const row of slice) html += buildRow(row);
   html += '</tbody></table>';
@@ -348,8 +348,9 @@ function exportCSV() {
 // ── BUILD ROW ─────────────────────────────────────────────────
 function buildRow(row) {
   const s   = (row['STATUS'] || '').toLowerCase();
-  const cls = s.includes('padr') && !s.includes('fora') ? 'badge status-padrao'
-            : s.includes('fora') ? 'badge status-fora' : 'badge';
+  const cls = s.includes('centr') ? 'badge status-padrao'   // Centralizado = verde
+            : s.includes('fora')  ? 'badge status-fora'
+            : 'badge';                                        // Padronizado (e demais) = branco
   return `<tr>
     <td>${esc(row['ITEM_ANTIGO'])}</td>
     <td><div class="cell-ellipsis">${esc(row['NOME_ANTIGO'])}</div></td>
