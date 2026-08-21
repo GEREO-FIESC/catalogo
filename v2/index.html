@@ -67,6 +67,14 @@
     .page-size-control{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap;}
     .page-size-control select{border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;background:#fff;color:var(--text);outline:none;cursor:pointer;}
 
+    /* MODAL DESCRIÇÃO */
+    .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+    .modal-overlay.open{display:flex;}
+    .modal-box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);max-width:560px;width:100%;max-height:80vh;overflow:auto;padding:22px 24px;}
+    .modal-box h3{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+    .modal-box .desc-text{font-size:15px;line-height:1.55;color:var(--text);white-space:pre-wrap;}
+    tbody tr{cursor:pointer;}
+
     @media(max-width:1200px){.filters-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
     @media(max-width:900px){.filters-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media(max-width:640px){.filters-grid{grid-template-columns:1fr;}}
@@ -128,6 +136,13 @@
 
 </main>
 
+<div class="modal-overlay" id="descModal">
+  <div class="modal-box" id="descModalBox">
+    <h3>Descrição</h3>
+    <div class="desc-text" id="descModalBody"></div>
+  </div>
+</div>
+
 <script>
 const JSON_URL  = '../data/catalogo_v2.json';
 const DEFAULT_PAGE_SIZE = 50;
@@ -138,6 +153,7 @@ let FILTERED = [];
 let currentPage = 1;
 let pageSize = DEFAULT_PAGE_SIZE;
 let searchTimer = null;
+let descOpenIdx = null;
 
 const $ = id => document.getElementById(id);
 
@@ -206,6 +222,16 @@ async function init() {
     applyFilters();
   });
 
+  // Pop-up de DESCRIÇÃO ao clicar na linha
+  $('tableHolder').addEventListener('click', (e) => {
+    const tr = e.target.closest('tr[data-idx]');
+    if (!tr) return;
+    openDesc(Number(tr.getAttribute('data-idx')));
+  });
+  $('descModal').addEventListener('click', (e) => {
+    if (e.target === $('descModal')) closeDesc(); // clicou fora da caixa
+  });
+
   applyFilters();
 }
 
@@ -237,9 +263,9 @@ function applyFilters() {
 function renderPage() {
   const start = (currentPage - 1) * pageSize;
   const end   = Math.min(start + pageSize, FILTERED.length);
-  const slice = FILTERED.slice(start, end).map(i => ALL[i]);
+  const sliceIdx = FILTERED.slice(start, end);
 
-  if (!slice.length) {
+  if (!sliceIdx.length) {
     $('tableHolder').innerHTML = '<div class="loader">Nenhum item encontrado.</div>';
     return;
   }
@@ -248,7 +274,7 @@ function renderPage() {
     <th>COD ANTIGO</th><th>NOME ANTIGO</th><th>VARIACAO ANTIGA</th><th>COD NOVO</th><th>NOME NOVO</th>
     <th>STATUS</th><th>AQUISIÇÃO</th><th>CATÁLOGO</th><th>GRUPO DE COMPRAS</th><th>TIPO DE PROD</th>
   </tr></thead><tbody>`;
-  for (const row of slice) html += buildRow(row);
+  for (const idx of sliceIdx) html += buildRow(ALL[idx], idx);
   html += '</tbody></table>';
   $('tableHolder').innerHTML = html;
 
@@ -346,12 +372,12 @@ function exportCSV() {
 }
 
 // ── BUILD ROW ─────────────────────────────────────────────────
-function buildRow(row) {
+function buildRow(row, idx) {
   const s   = (row['STATUS'] || '').toLowerCase();
   const cls = s.includes('centr') ? 'badge status-padrao'   // Centralizado = verde
             : s.includes('fora')  ? 'badge status-fora'
             : 'badge';                                        // Padronizado (e demais) = branco
-  return `<tr>
+  return `<tr data-idx="${idx}">
     <td>${esc(row['ITEM_ANTIGO'])}</td>
     <td><div class="cell-ellipsis">${esc(row['NOME_ANTIGO'])}</div></td>
     <td><div class="cell-ellipsis">${esc(row['VARIACAO_ANTIGA'])}</div></td>
@@ -363,6 +389,19 @@ function buildRow(row) {
     <td><div class="cell-ellipsis">${esc(row['GRUPOCOMPRAS'])}</div></td>
     <td>${esc(row['TIPOPROD'])}</td>
   </tr>`;
+}
+
+// ── POP-UP DESCRIÇÃO ──────────────────────────────────────────
+function openDesc(idx) {
+  if (descOpenIdx === idx) { closeDesc(); return; } // clicar na mesma linha de novo fecha
+  descOpenIdx = idx;
+  const val = (ALL[idx] && ALL[idx]['DESCRICAO']) ? ALL[idx]['DESCRICAO'] : '';
+  $('descModalBody').textContent = val || '—';
+  $('descModal').classList.add('open');
+}
+function closeDesc() {
+  descOpenIdx = null;
+  $('descModal').classList.remove('open');
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
